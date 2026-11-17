@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">LOCKIN</string>
+    <string name="accessibility_description">Detects when restricted apps are opened and displays the LOCKIN block screen.</string>
+</resources>

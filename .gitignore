@@ -1,0 +1,38 @@
+# Gradle build cache & outputs
+.gradle/
+build/
+app/build/
+**/build/
+
+# Local configuration & Android SDK paths
+local.properties
+.cxx/
+.externalNativeBuild/
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.shelf/
+
+# Eclipse / VS Code
+.classpath
+.project
+.settings/
+.vscode/
+
+# Signing keys & keystores
+*.jks
+*.keystore
+
+# Operating System files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Log files
+*.log
+captures/
