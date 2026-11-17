@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">LOCKIN</string>
-    <string name="accessibility_description">Detects when restricted apps are opened and displays the LOCKIN block screen.</string>
+    <string name="accessibility_service_label">LOCKIN app blocking</string>
+    <string name="accessibility_description">LOCKIN uses this service exclusively to observe foreground app transitions in order to display the focus block screen when daily limits or hard blocks expire. It never inspects screen text, records keystrokes, collects personal data, or transmits information.</string>
 </resources>

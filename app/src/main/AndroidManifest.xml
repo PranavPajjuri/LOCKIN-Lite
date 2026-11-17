@@ -1,15 +1,42 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Core permission: measures daily non-exempt foreground screen usage (6-hour limit) -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Scoped package queries: replaces high-risk QUERY_ALL_PACKAGES with exact intent matching -->
+    <queries>
+        <!-- Allows discovering launchable apps for exemption management -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- Allows discovering system home launchers to ensure user is never locked out -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+        <!-- Allows resolving default contacts handler for communication exemptions -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" />
+            <data android:mimeType="vnd.android.cursor.dir/contact" />
+        </intent>
+        <!-- Explicit exemption and hard-block target packages -->
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <package android:name="com.openai.chatgpt" />
+        <package android:name="com.netflix.mediaclient" />
+        <package android:name="in.startv.hotstar" />
+        <package android:name="in.hotstar.dplus" />
+        <package android:name="com.hotstar" />
+    </queries>
 
     <application
         android:allowBackup="false"
-        android:label="LOCKIN"
+        android:label="@string/app_name"
         android:theme="@style/AppTheme">
 
         <activity
@@ -28,11 +55,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Accessibility Service: strictly limited to observing window state transitions -->
         <service
             android:name=".LockAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
-            android:label="LOCKIN app blocking">
+            android:label="@string/accessibility_service_label">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -40,15 +68,6 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-
-        <receiver
-            android:name=".BootReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
 
     </application>
 </manifest>

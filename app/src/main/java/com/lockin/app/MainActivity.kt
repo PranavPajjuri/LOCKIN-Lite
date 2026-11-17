@@ -77,11 +77,11 @@ class MainActivity : Activity() {
 
         val userExempt = LockPrefs.userExemptPackages(this)
         val systemExempt = LockPrefs.systemExemptPackages(this)
-        val apps = packageManager.getInstalledApplications(0)
-            .filter {
-                packageManager.getLaunchIntentForPackage(it.packageName) != null &&
-                    it.packageName !in systemExempt
-            }
+        val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        val apps = packageManager.queryIntentActivities(launcherIntent, 0)
+            .mapNotNull { it.activityInfo?.applicationInfo }
+            .distinctBy { it.packageName }
+            .filter { it.packageName !in systemExempt }
             .sortedBy { packageManager.getApplicationLabel(it).toString().lowercase() }
 
         apps.forEach { app ->

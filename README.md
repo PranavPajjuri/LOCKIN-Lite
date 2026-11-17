@@ -10,30 +10,32 @@ A minimal Android app-blocking prototype for personal focus enforcement.
 - **Default user exemptions:** Phone, Messages, Contacts, WhatsApp, and ChatGPT are preselected by default, with checkboxes to add or remove user apps.
 - **Timed override:** After hitting the 6-hour limit, waiting 60 seconds grants a 10-minute temporary unlock for that app.
 - **Hard block:** Netflix and Hotstar (`com.netflix.mediaclient`, `in.startv.hotstar`, `in.hotstar.dplus`, `com.hotstar`, or matching app labels) remain strictly blocked until **December 2, 2026 at 00:00 IST (`Asia/Kolkata`)** with no override option.
+- **Privacy by Design:** Zero internet permissions (`android.permission.INTERNET` is not requested). No data ever leaves the device.
 
 ## Automated APK Build (GitHub Actions)
 
-1. Push this project to a private GitHub repository (`main` or `master` branch).
-2. Open the **Actions** tab in GitHub (or manually trigger **Android CI** via **Run workflow**).
-3. Wait for the **Build Debug APK** job to complete.
-4. Download the **LOCKIN-Lite-debug** artifact from the bottom of the workflow summary page and unzip it to get `app-debug.apk`.
+1. Push this project to your GitHub repository (`main` or `master` branch).
+2. Open the **Actions** tab in GitHub.
+3. Wait for the **Android CI** job to complete.
+4. Download the **LOCKIN-Lite-release** artifact from the bottom of the workflow summary page and unzip it to get `app-release.apk`.
 
-## Installation & Setup on Android 16 (API 36)
+## Installation & Setup on Android 12–16
 
-Because this APK is sideloaded rather than installed from Google Play, Android 13–16 enforces **Restricted Settings** on Accessibility Services:
+Because this APK is sideloaded rather than installed from Google Play, Android enforces **Restricted Settings** on Accessibility Services:
 
-1. **Install the APK:** Transfer `app-debug.apk` to your Android 16 phone and tap it to install. If prompted, enable **Allow from this source** for your file manager or browser.
-2. **Allow Restricted Settings (Mandatory on Android 16):**
+1. **Install the APK:** Transfer `app-release.apk` to your phone and tap it to install. If prompted, enable **Allow from this source** for your file manager or browser.
+2. **Google Play Protect Notice:** If prompted by Play Protect ("Unknown app"), tap **More details > Install anyway**. To permanently whitelist the application, submit the signed release APK to the [Google Play Protect Appeal Form](https://support.google.com/googleplay/android-developer/contact/protectappeals).
+3. **Allow Restricted Settings (Mandatory on Android 13–16):**
    - Open your phone's **Settings** app > **Apps** > **See all apps** > **LOCKIN**.
    - Tap the **three-dot menu (`⋮`)** in the top-right corner and select **Allow restricted settings** (authenticate with your fingerprint/PIN).
-   - *(Note: On some OEM skins like Vivo/iQOO FuntouchOS or Xiaomi HyperOS, you must first tap "Enable App Blocking" inside LOCKIN once so Android shows the "Restricted setting" dialog, after which the option appears in App Info.)*
-3. **Grant Usage Access:**
+   - *(Note: On some OEM skins like Vivo/iQOO FuntouchOS or Xiaomi HyperOS, you must first tap "Enable App Blocking" inside LOCKIN once so Android displays the restricted setting dialog, after which the option appears in App Info.)*
+4. **Grant Usage Access:**
    - Open **LOCKIN** and tap **Grant Usage Access**.
    - Select **LOCKIN** in the Usage Access list and toggle **Permit usage access** ON.
-4. **Enable App Blocking (Accessibility Service):**
+5. **Enable App Blocking (Accessibility Service):**
    - Return to **LOCKIN** and tap **Enable App Blocking**.
    - Find **LOCKIN app blocking** under Downloaded/Installed services and toggle it ON.
-5. **Disable Battery Optimization (Recommended for OEMs):**
+6. **Disable Battery Optimization (Recommended for OEMs):**
    - Go to **Settings > Apps > LOCKIN > Battery** and set it to **Unrestricted** so the OS does not kill the background accessibility service.
 
 ## Known Accuracy & Platform Limitations

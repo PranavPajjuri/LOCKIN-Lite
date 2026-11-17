@@ -130,8 +130,11 @@ object LockPrefs {
             }
         }
         // Keep only packages actually installed on this device (plus core targets) so the list stays clean
+        val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val installed = runCatching {
-            context.packageManager.getInstalledApplications(0).map { it.packageName }.toSet()
+            context.packageManager.queryIntentActivities(launcherIntent, 0)
+                .mapNotNull { it.activityInfo?.packageName }
+                .toSet()
         }.getOrDefault(emptySet())
         if (installed.isNotEmpty()) {
             result.retainAll(installed + setOf("com.whatsapp", "com.openai.chatgpt"))

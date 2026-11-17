@@ -39,10 +39,9 @@ object UsageCalculator {
         if (now <= startOfDay) return 0L
 
         val exempt = LockPrefs.allExemptPackages(context)
-        val launchablePackages = context.packageManager.getInstalledApplications(0)
-            .asSequence()
-            .filter { context.packageManager.getLaunchIntentForPackage(it.packageName) != null }
-            .map { it.packageName }
+        val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        val launchablePackages = context.packageManager.queryIntentActivities(launcherIntent, 0)
+            .mapNotNull { it.activityInfo?.packageName }
             .toSet()
 
         val events = manager.queryEvents(startOfDay, now)
