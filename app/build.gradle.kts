@@ -17,14 +17,25 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = project.rootProject.file(
-                System.getenv("KEYSTORE_PATH") ?: "release.keystore"
-            )
-            if (keystoreFile.exists()) {
-                storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "lockin_release_storepass"
-                keyAlias = System.getenv("KEY_ALIAS") ?: "lockin"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "lockin_release_keypass"
+            // All signing values are sourced exclusively from environment variables
+            // injected by GitHub Actions secrets. No passwords are stored in this file.
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+            val keyAlias = System.getenv("KEY_ALIAS")
+            val keyPassword = System.getenv("KEY_PASSWORD")
+
+            if (!keystorePath.isNullOrBlank() &&
+                !keystorePassword.isNullOrBlank() &&
+                !keyAlias.isNullOrBlank() &&
+                !keyPassword.isNullOrBlank()
+            ) {
+                val keystoreFile = project.rootProject.file(keystorePath)
+                if (keystoreFile.exists()) {
+                    storeFile = keystoreFile
+                    storePassword = keystorePassword
+                    this.keyAlias = keyAlias
+                    this.keyPassword = keyPassword
+                }
             }
         }
     }
@@ -33,6 +44,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -40,6 +52,10 @@ android {
             val releaseSigning = signingConfigs.getByName("release")
             if (releaseSigning.storeFile?.exists() == true) {
                 signingConfig = releaseSigning
+            } else {
+                // Fail loudly during local builds if signing is not configured.
+                // The workflow's secret validation step catches this in CI before Gradle runs.
+                println("WARNING: Release signing is not configured. The APK will be unsigned.")
             }
         }
         debug {

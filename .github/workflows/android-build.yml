@@ -25,54 +25,66 @@ jobs:
           gradle-version: '8.10.2'
           validate-wrappers: false
 
-      - name: Prepare Release Signing Keystore
+      - name: Validate signing secrets
+        run: |
+          missing=""
+          [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]    && missing="$missing KEYSTORE_BASE64"
+          [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ]  && missing="$missing KEYSTORE_PASSWORD"
+          [ -z "${{ secrets.KEY_ALIAS }}" ]           && missing="$missing KEY_ALIAS"
+          [ -z "${{ secrets.KEY_PASSWORD }}" ]        && missing="$missing KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Release build cannot proceed. The following repository secrets are missing:$missing"
+            echo ""
+            echo "To fix this, go to your repository on GitHub:"
+            echo "  Settings > Secrets and variables > Actions > New repository secret"
+            echo ""
+            echo "Add all four secrets listed above. See README.md for keystore generation instructions."
+            exit 1
+          fi
+          echo "All signing secrets are present."
+
+      - name: Decode release keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "Decoding release keystore from repository secret..."
-            echo "$KEYSTORE_BASE64" | base64 --decode > release.keystore
-          else
-            echo "Generating production release signing key in CI runner..."
-            keytool -genkeypair -v \
-              -keystore release.keystore \
-              -alias lockin \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass lockin_release_storepass \
-              -keypass lockin_release_keypass \
-              -dname "CN=LOCKIN, OU=Security, O=LOCKIN App, L=Bangalore, ST=Karnataka, C=IN"
-          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > release.keystore
+          echo "Keystore decoded successfully."
 
-      - name: Build Production Release APK
+      - name: Build signed release APK
         env:
-          KEYSTORE_PATH: "release.keystore"
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'lockin_release_storepass' }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lockin' }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lockin_release_keypass' }}
+          KEYSTORE_PATH: release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle assembleRelease --stacktrace
 
-      - name: Verify Release APK Generated
+      - name: Verify release APK
         run: |
-          if [ ! -f "app/build/outputs/apk/release/app-release.apk" ]; then
-            echo "::error::Signed Release APK was not generated at app/build/outputs/apk/release/app-release.apk"
+          APK="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$APK" ]; then
+            echo "::error::Release APK was not generated at expected path: $APK"
             exit 1
           fi
-          echo "Production Release APK generated successfully:"
-          ls -lh app/build/outputs/apk/release/app-release.apk
+          echo "Release APK generated:"
+          ls -lh "$APK"
+          # Confirm APK is not debuggable
+          if aapt dump badging "$APK" 2>/dev/null | grep -q "debuggable='true'"; then
+            echo "::error::Release APK is marked debuggable. This is a build configuration error."
+            exit 1
+          fi
+          echo "APK is not debuggable. Build is clean."
 
-      - name: Upload Release APK Artifact
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
           name: LOCKIN-Lite-release
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
-      - name: Build Debug APK (For Testing)
+      - name: Build debug APK (testing only)
         run: gradle assembleDebug --stacktrace
 
-      - name: Upload Debug APK Artifact
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: LOCKIN-Lite-debug

@@ -12,12 +12,71 @@ A minimal Android app-blocking prototype for personal focus enforcement.
 - **Hard block:** Netflix and Hotstar (`com.netflix.mediaclient`, `in.startv.hotstar`, `in.hotstar.dplus`, `com.hotstar`, or matching app labels) remain strictly blocked until **December 2, 2026 at 00:00 IST (`Asia/Kolkata`)** with no override option.
 - **Privacy by Design:** Zero internet permissions (`android.permission.INTERNET` is not requested). No data ever leaves the device.
 
-## Automated APK Build (GitHub Actions)
+---
 
-1. Push this project to your GitHub repository (`main` or `master` branch).
-2. Open the **Actions** tab in GitHub.
-3. Wait for the **Android CI** job to complete.
-4. Download the **LOCKIN-Lite-release** artifact from the bottom of the workflow summary page and unzip it to get `app-release.apk`.
+## GitHub Actions Setup: Release Signing (Required Before First Build)
+
+The release build requires a persistent signing keystore stored as GitHub repository secrets. The build **will fail with a clear error** if any secret is missing.
+
+### Step 1: Generate Your Release Keystore (One Time Only)
+
+Run this command on your computer (requires Java JDK installed):
+
+```bash
+keytool -genkeypair -v \
+  -keystore lockin-release.keystore \
+  -alias lockin \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000 \
+  -dname "CN=LOCKIN, O=LOCKIN App, C=IN"
+```
+
+You will be prompted to set a keystore password and key password. **Keep this file and both passwords safe and backed up privately. Never commit `lockin-release.keystore` to git.**
+
+### Step 2: Encode the Keystore as Base64
+
+```bash
+base64 -i lockin-release.keystore | tr -d '\n'
+```
+
+Copy the output string.
+
+### Step 3: Add GitHub Repository Secrets
+
+Go to your repository on GitHub:
+**Settings → Secrets and variables → Actions → New repository secret**
+
+Add all four secrets:
+
+| Secret name | Value |
+| :--- | :--- |
+| `KEYSTORE_BASE64` | The base64 string from Step 2 |
+| `KEYSTORE_PASSWORD` | The keystore store password you chose |
+| `KEY_ALIAS` | `lockin` |
+| `KEY_PASSWORD` | The key password you chose |
+
+### Step 4: Push to Trigger the Build
+
+Once all four secrets are saved, push any commit to `main`. The workflow will:
+1. Validate all four secrets are present (fails fast if any is missing).
+2. Decode the keystore from the secret.
+3. Build a signed, minified, non-debuggable `app-release.apk`.
+4. Upload it as the **`LOCKIN-Lite-release`** artifact.
+
+> **Important:** Always use the same keystore for every future release. If you regenerate the keystore with a different key, users cannot update the app over their existing installation.
+
+---
+
+## Downloading the APK
+
+1. Go to the **Actions** tab in your GitHub repository.
+2. Click the latest successful **Android CI** run.
+3. Scroll to **Artifacts** at the bottom of the summary page.
+4. Click **`LOCKIN-Lite-release`** to download the ZIP file.
+5. Extract the ZIP to get `app-release.apk`.
+
+---
 
 ## Installation & Setup on Android 12–16
 
@@ -37,6 +96,8 @@ Because this APK is sideloaded rather than installed from Google Play, Android e
    - Find **LOCKIN app blocking** under Downloaded/Installed services and toggle it ON.
 6. **Disable Battery Optimization (Recommended for OEMs):**
    - Go to **Settings > Apps > LOCKIN > Battery** and set it to **Unrestricted** so the OS does not kill the background accessibility service.
+
+---
 
 ## Known Accuracy & Platform Limitations
 

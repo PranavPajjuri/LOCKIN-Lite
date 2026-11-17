@@ -53,9 +53,11 @@ class LockAccessibilityService : AccessibilityService() {
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         if (!pm.isInteractive) return
 
-        // Prefer active window root package, fall back to last observed package or UsageEvents
-        val activePkg = rootInActiveWindow?.packageName?.toString()
-            ?: currentForegroundPackage
+        // canRetrieveWindowContent is intentionally false (privacy hardening).
+        // rootInActiveWindow always returns null in that configuration, so we
+        // rely on the last package observed from accessibility events and fall
+        // back to UsageEvents for the periodic enforcement poll.
+        val activePkg = currentForegroundPackage
             ?: UsageCalculator.currentForegroundPackage(this)
             ?: return
 
