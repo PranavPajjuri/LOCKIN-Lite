@@ -117,8 +117,7 @@ class MainActivity : Activity() {
     private fun updatePermissionStatus() {
         val usage = UsageCalculator.hasUsageAccess(this)
         val accessibility = isAccessibilityEnabled()
-        permissionStatus.text = "Usage Access: ${if (usage) "Enabled" else "Not enabled"}
-App Blocking: ${if (accessibility) "Enabled" else "Not enabled"}"
+        permissionStatus.text = "Usage Access: ${if (usage) "Enabled" else "Not enabled"}\nApp Blocking: ${if (accessibility) "Enabled" else "Not enabled"}"
     }
 
     private fun updateUsageText() {

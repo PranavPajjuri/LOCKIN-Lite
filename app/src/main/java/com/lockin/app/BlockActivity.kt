@@ -22,7 +22,7 @@ class BlockActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var status: TextView
     private lateinit var action: Button
-    private var packageName = ""
+    private var targetPackage = ""
     private var hardBlock = false
     private var waiting = false
     private var waitStarted = 0L
@@ -85,8 +85,8 @@ class BlockActivity : Activity() {
     }
 
     private fun handleIntent(currentIntent: Intent) {
-        packageName = currentIntent.getStringExtra(EXTRA_PACKAGE).orEmpty()
-        hardBlock = currentIntent.getBooleanExtra(EXTRA_HARD_BLOCK, false) || LockPrefs.isHardBlocked(this, packageName)
+        targetPackage = currentIntent.getStringExtra(EXTRA_PACKAGE).orEmpty()
+        hardBlock = currentIntent.getBooleanExtra(EXTRA_HARD_BLOCK, false) || LockPrefs.isHardBlocked(this, targetPackage)
 
         if (hardBlock) {
             status.text = "This app is locked until December 2, 2026 at midnight IST."
@@ -100,18 +100,18 @@ class BlockActivity : Activity() {
 
     private fun renderNormalBlock() {
         status.text = "Your daily 6-hour allowance for non-exempt apps has been used."
-        waitStarted = LockPrefs.waitStartedAt(this, packageName)
+        waitStarted = LockPrefs.waitStartedAt(this, targetPackage)
         val elapsed = System.currentTimeMillis() - waitStarted
         if (waitStarted > 0 && elapsed in 0 until 60_000) {
             waiting = true
             updateWaitButton()
         } else {
             waiting = false
-            LockPrefs.clearWait(this, packageName)
+            LockPrefs.clearWait(this, targetPackage)
             action.text = "Wait 60 seconds for 10-minute access"
             action.isEnabled = true
             action.setOnClickListener {
-                waitStarted = LockPrefs.startWait(this, packageName)
+                waitStarted = LockPrefs.startWait(this, targetPackage)
                 waiting = true
                 updateWaitButton()
             }
@@ -125,8 +125,8 @@ class BlockActivity : Activity() {
             action.text = "Unlock for 10 minutes"
             action.isEnabled = true
             action.setOnClickListener {
-                LockPrefs.grantOverride(this, packageName)
-                LockPrefs.clearWait(this, packageName)
+                LockPrefs.grantOverride(this, targetPackage)
+                LockPrefs.clearWait(this, targetPackage)
                 finish()
             }
         } else {
